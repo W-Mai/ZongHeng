@@ -1,4 +1,5 @@
 #include "Qin.h"
+#include <iostream>
 #include <vector>
 
 template<typename T>
