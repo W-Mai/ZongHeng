@@ -7,6 +7,9 @@
 
 #include <vector>
 
+template<class T>
+class Qin;
+
 class QinBase {
 protected:
     using Zong_t = std::vector<QinBase*>;
@@ -19,6 +22,11 @@ public:
     friend void operator<<(QinBase* l, QinBase& r);
 
     void bind(QinBase* src);
+
+    template<class T>
+    Qin<T>& into() {
+        return *reinterpret_cast<Qin<T>*>(this);
+    }
 };
 
 template<class T>
@@ -38,7 +46,7 @@ public:
     void set(T&& val) {
         value = std::forward<T>(val);
         for (QinBase* qin : Zong) {
-            static_cast<Qin<T>*>(qin)->set(std::forward<T>(val));
+            qin->into<T>().set(std::forward<T>(val));
         }
     }
 
@@ -56,5 +64,7 @@ public:
         return *this;
     }
 };
+
+#include "QinUtils.h"
 
 #endif // ZONGHENG_QIN_H
