@@ -4,9 +4,9 @@
 
 template<typename T>
 void display(std::vector<QinBase*>& vec) {
-    for (QinBase* item : vec) {
-        std::cout << static_cast<Qin<T>*>(item)->get() << " ";
-    }
+    std::for_each(vec.begin(), vec.end(), [](QinBase* item) {
+        std::cout << as<T>(item).get() << " ";
+    });
     std::cout << std::endl;
 }
 
@@ -23,11 +23,18 @@ int main() {
     }
     display<int>(vec);
 
-    int a                    = 4;
-    *(Qin<int>*)(vec.back()) = a;
+    int a               = 4;
+    as<int>(vec.back()) = a;
     display<int>(vec);
 
-    *(Qin<int>*)(vec.back()) = 114514;
+    as<int>(vec.back()) = 114514;
+    display<int>(vec);
+
+    vec.back()->into<int>() = 2333;
+    display<int>(vec);
+
+    auto& q = vec.back()->into<int>();
+    q       = 42;
     display<int>(vec);
 
     return 0;
