@@ -10,7 +10,7 @@ void display(std::vector<QinBase*>& vec) {
     std::cout << std::endl;
 }
 
-int main() {
+void test_chain() {
     auto vec = std::vector<QinBase*> {};
 
     for (int i = 0; i < 10; i++) {
@@ -36,6 +36,20 @@ int main() {
     auto& q = vec.back()->into<int>();
     q       = 42;
     display<int>(vec);
+}
 
+void test_binary_ops() {
+    auto p  = new Qin<int> { 10 };
+    auto q  = new Qin<int> { 30 };
+    auto zh = &q->lian<std::multiplies<int>>(p);
+    std::cout << *zh << std::endl;
+
+    *q = 3;
+    std::cout << *zh << std::endl;
+}
+
+int main() {
+    test_chain();
+    test_binary_ops();
     return 0;
 }
