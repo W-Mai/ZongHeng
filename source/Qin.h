@@ -17,7 +17,7 @@ struct nothing : std::binary_function<T, T, T> {
     T operator()(const T& x, const T& y) const { return 0; }
 };
 
-template<class T, class Fn = nothing<T>>
+template<class T>
 class Qin;
 
 class QinBase {
@@ -46,33 +46,38 @@ public:
     }
 };
 
-template<class T, class Fn>
+template<class T>
 class Qin : public QinBase {
-    T  value;
-    Fn effect;
+    std::function<T()> value;
+    std::function<T()> effect;
 
 public:
-    Qin(Qin<T>& v) noexcept
-        : value(std::forward<T>(v.value)) { }
+    Qin(Qin<T>& v) noexcept {
+        set(std::forward<T>(v));
+    }
 
-    explicit Qin(T& v)
-        : value(std::forward<T>(v)) { }
+    explicit Qin(T& v) {
+        set(std::forward<T>(v));
+    }
 
-    explicit Qin(T&& v)
-        : value(std::forward<T>(v)) { }
+    explicit Qin(T&& v) {
+        set(std::forward<T>(v));
+    }
 
     void set(T&& val) {
-        value = std::forward<T>(val);
+        value = [&]() -> T {
+            return std::forward<T>(val);
+        };
         for (QinBase* qin : Zong) {
             qin->into<T>().set(std::forward<T>(val));
         }
     }
 
     T get() {
-        if (!std::is_same<decltype(effect), nothing<T>>::value) {
-            return effect(Heng[0]->template into<T>().get(), Heng[1]->template into<T>().get());
+        if (effect) {
+            return effect();
         }
-        return value;
+        return value();
     }
 
     Qin<T>& operator=(T& val) {
@@ -89,24 +94,26 @@ public:
         return get();
     }
 
-    template<class FnNew>
-    void setEff(FnNew eff) {
+    template<class Fn>
+    void setEff(Fn eff) {
         this->effect = eff;
     }
 
-    template<class FnNew>
-    Qin<T, FnNew>& lian(QinBase* q, FnNew eff) {
-        auto new_qin = new Qin<T, FnNew> { T {} };
+    template<class Fn>
+    Qin<T>& lian(QinBase* q, Fn eff) {
+        auto new_qin = new Qin<T> { T {} };
         new_qin->QinBase::lian(this, q);
         new_qin->setEff(eff);
         return *new_qin;
     }
 
-    template<class FnNew>
-    Qin<T, FnNew>& lian(QinBase* q) {
-        auto new_qin = new Qin<T, FnNew> { T {} };
+    template<class Fn>
+    Qin<T>& lian(QinBase* q) {
+        auto new_qin = new Qin<T> { T {} };
         new_qin->QinBase::lian(this, q);
-        new_qin->setEff(FnNew());
+        new_qin->setEff([this, q]() -> T {
+            return Fn()(this->get(), q->template into<T>().get());
+        });
         return *new_qin;
     }
 };
