@@ -9,15 +9,6 @@
 #include <vector>
 
 template<class T>
-struct nothing : std::binary_function<T, T, T> {
-    typedef T result_type;
-    typedef T first_argument_type;
-    typedef T second_argument_type;
-
-    T operator()(const T& x, const T& y) const { return 0; }
-};
-
-template<class T>
 class Qin;
 
 class QinBase {
@@ -115,6 +106,14 @@ public:
             return Fn()(this->get(), q->template into<T>().get());
         });
         return *new_qin;
+    }
+
+    friend Qin<T>& operator+(Qin<T>& p, Qin<T>& q) {
+        return p.lian<std::plus<T>>(&q);
+    }
+
+    friend Qin<T>& operator*(Qin<T>& p, Qin<T>& q) {
+        return p.lian<std::multiplies<T>>(&q);
     }
 };
 
