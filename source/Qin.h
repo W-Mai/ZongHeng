@@ -39,7 +39,7 @@ public:
 
 template<class T>
 class Qin : public QinBase {
-    T&&                rawValue;
+    T                  rawValue; // 不知道怎么才能合理引用🤔，暂时先复制吧
     std::function<T()> value;
     std::function<T()> effect;
 
