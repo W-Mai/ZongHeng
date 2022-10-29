@@ -24,3 +24,13 @@ add_executable(example ${APP_SOURCES})
 
 # Link
 target_link_libraries(example ZongHeng)
+
+# test
+enable_testing()
+
+add_subdirectory(test)
+
+add_test(
+        NAME plus_test
+        COMMAND $<TARGET_FILE:plus_test>
+)
