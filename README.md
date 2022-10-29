@@ -5,6 +5,8 @@ history.
 
 # General Usage
 
+[![asciicast](https://asciinema.org/a/4hVNy8g5x5BBMQtjvNM27koqs.svg)](https://asciinema.org/a/4hVNy8g5x5BBMQtjvNM27koqs)
+
 ```c++
 #include "Qin.h"
 #include <iostream>
