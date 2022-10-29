@@ -34,3 +34,8 @@ add_test(
         NAME plus_test
         COMMAND $<TARGET_FILE:plus_test>
 )
+
+add_test(
+        NAME plus_string_test
+        COMMAND $<TARGET_FILE:plus_string_test>
+)

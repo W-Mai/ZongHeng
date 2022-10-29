@@ -22,4 +22,9 @@
     "L: %f, R: %f",       \
         __ASSERT_TAIL(x, y)
 
+#define ASSERT_S(x, y)    \
+    __ASSERT_HEADER(x, y) \
+    "L: %s, R: %s",       \
+        __ASSERT_TAIL((x).c_str(), (y).c_str())
+
 #endif // EXAMPLE_TEST_UTILS_H
