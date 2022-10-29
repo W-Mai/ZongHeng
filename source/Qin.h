@@ -39,6 +39,7 @@ public:
 
 template<class T>
 class Qin : public QinBase {
+    T&&                rawValue;
     std::function<T()> value;
     std::function<T()> effect;
 
@@ -47,17 +48,20 @@ public:
         set(std::forward<T>(v));
     }
 
-    explicit Qin(T& v) {
+    explicit Qin(T& v)
+        : rawValue(std::forward<T>(v)) {
         set(std::forward<T>(v));
     }
 
-    explicit Qin(T&& v) {
+    explicit Qin(T&& v)
+        : rawValue(std::forward<T>(v)) {
         set(std::forward<T>(v));
     }
 
     void set(T&& val) {
-        value = [&]() -> T {
-            return std::forward<T>(val);
+        rawValue = val;
+        value    = [&]() -> T {
+            return rawValue;
         };
         for (QinBase* qin : Zong) {
             qin->into<T>().set(std::forward<T>(val));
@@ -81,7 +85,7 @@ public:
         return *this;
     }
 
-    operator T() {
+    explicit operator T() {
         return get();
     }
 
@@ -99,21 +103,29 @@ public:
     }
 
     template<class Fn>
-    Qin<T>& lian(QinBase* q) {
+    Qin<T>* lian(QinBase* q) {
         auto new_qin = new Qin<T> { T {} };
         new_qin->QinBase::lian(this, q);
         new_qin->setEff([this, q]() -> T {
             return Fn()(this->get(), q->template into<T>().get());
         });
-        return *new_qin;
+        return new_qin;
     }
 
-    friend Qin<T>& operator+(Qin<T>& p, Qin<T>& q) {
+    friend Qin<T>* operator+(Qin<T>& p, Qin<T>& q) {
         return p.lian<std::plus<T>>(&q);
     }
 
-    friend Qin<T>& operator*(Qin<T>& p, Qin<T>& q) {
+    friend Qin<T>* operator+(Qin<T>* p, Qin<T>& q) {
+        return p->lian<std::plus<T>>(&q);
+    }
+
+    friend Qin<T>* operator*(Qin<T>& p, Qin<T>& q) {
         return p.lian<std::multiplies<T>>(&q);
+    }
+
+    friend Qin<T>* operator*(Qin<T>* p, Qin<T>& q) {
+        return p->lian<std::multiplies<T>>(&q);
     }
 };
 
