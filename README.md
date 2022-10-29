@@ -33,8 +33,16 @@ int main() {
 
 ```shell
 mkdir -p build && cd build
-cmake .. && make
+cmake .. && make -j
 ./example
+```
+
+# Run Test
+
+```shell
+mkdir -p build && cd build
+cmake .. && make -j
+ctest
 ```
 
 # Commit Information
