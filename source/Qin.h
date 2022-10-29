@@ -49,18 +49,18 @@ public:
     }
 
     explicit Qin(T& v)
-        : rawValue(std::forward<T>(v)) {
+        : rawValue(v) {
         set(std::forward<T>(v));
     }
 
     explicit Qin(T&& v)
-        : rawValue(std::forward<T>(v)) {
+        : rawValue(v) {
         set(std::forward<T>(v));
     }
 
     void set(T&& val) {
         rawValue = val;
-        value    = [&]() -> T {
+        value    = [=]() -> T {
             return rawValue;
         };
         for (QinBase* qin : Zong) {
