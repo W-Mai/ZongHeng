@@ -39,9 +39,11 @@ public:
 
 template<class T>
 class Qin : public QinBase {
-    T                  rawValue; // 不知道怎么才能合理引用🤔，暂时先复制吧
-    std::function<T()> value;
-    std::function<T()> effect;
+    T                          rawValue; // 不知道怎么才能合理引用🤔，暂时先复制吧
+    std::function<T()>         value;
+    std::function<T()>         effect;
+    std::function<T(const T&)> _setter;
+    std::function<T(const T&)> _getter;
 
 public:
     Qin(Qin<T>& v) noexcept {
@@ -59,6 +61,9 @@ public:
     }
 
     void set(T&& val) {
+        if (_setter) {
+            val = _setter(val);
+        }
         rawValue = val;
         value    = [=]() -> T {
             return rawValue;
@@ -69,10 +74,16 @@ public:
     }
 
     T get() {
+        T v;
         if (effect) {
-            return effect();
+            v = effect();
+        } else {
+            v = value();
         }
-        return value();
+        if (_getter) {
+            v = _getter(v);
+        }
+        return v;
     }
 
     Qin<T>& operator=(T& val) {
@@ -110,6 +121,19 @@ public:
             return Fn()(this->get(), q->template into<T>().get());
         });
         return new_qin;
+    }
+
+    void setter(decltype(_setter) s) {
+        _setter = s;
+    }
+
+    void getter(decltype(_getter) g) {
+        _getter = g;
+    }
+
+    void hook(decltype(_getter) g = nullptr, decltype(_setter) s = nullptr) {
+        getter(g);
+        setter(s);
     }
 
     friend Qin<T>* operator+(Qin<T>& p, Qin<T>& q) {
