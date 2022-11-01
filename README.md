@@ -20,6 +20,10 @@ int main() {
     // 联合`变量`
     auto sentence = *hello + *name + *mark;
 
+    sentence->getter([](const string& s) {
+        return s + " 🤤";
+    });
+
     auto name_tmp = std::string("World");
     do {
         // 一呼百应
