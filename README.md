@@ -15,7 +15,7 @@ using namespace std;
 
 int main() {
     auto hello    = new Qin<string> { "Hello " };
-    auto name     = new Qin<string> { "" };
+    auto name     = new Qin<string>;
     auto mark     = new Qin<string> { " !" };
     // 联合`变量`
     auto sentence = *hello + *name + *mark;
