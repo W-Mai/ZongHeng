@@ -46,6 +46,10 @@ class Qin : public QinBase {
     std::function<T(const T&)> _getter;
 
 public:
+    Qin() noexcept {
+        set(T {});
+    }
+
     Qin(Qin<T>& v) noexcept {
         set(std::forward<T>(v));
     }
