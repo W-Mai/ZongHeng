@@ -51,6 +51,12 @@ cmake .. && make -j
 ctest
 ```
 
+# TODO
+
+- [ ] Support more complex chain
+- [ ] Support condition chain
+- [ ] ...
+
 # Commit Information
 
 | means    | emoji |
