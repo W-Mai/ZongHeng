@@ -7,11 +7,11 @@
 #include <vector>
 
 int test_binary_int_ops() {
-    auto p = new Qin<int> { 10 };
-    auto q = new Qin<int> { 30 };
-    auto r = new Qin<int> { 37 };
+    auto p = Qin<int>::make(10);
+    auto q = Qin<int>::make(30);
+    auto r = Qin<int>::make(37);
 
-    auto zh = *q + *p + *r;
+    auto zh = q + p + r;
 
     ASSERT_I(zh->get(), 10 + 30 + 37);
     *q = 3;
@@ -21,11 +21,11 @@ int test_binary_int_ops() {
 }
 
 int test_binary_double_ops() {
-    auto p = new Qin<double> { 3.14 };
-    auto q = new Qin<double> { 1 };
-    auto r = new Qin<double> { -10 };
+    auto p = Qin<double>::make(3.14);
+    auto q = Qin<double>::make(1);
+    auto r = Qin<double>::make(-10);
 
-    auto zh = *q + *p + *r;
+    auto zh = q + p + r;
 
     ASSERT_F(zh->get(), 3.14 + 1 - 10);
     *p = 2.5;
@@ -37,15 +37,15 @@ int test_binary_double_ops() {
 }
 
 int test_binary_many_int_ops() {
-    const int              NUM = 100;
-    std::vector<Qin<int>*> operands;
+    const int                          NUM = 100;
+    std::vector<Qin<int>::SharedQin_T> operands;
     for (int i = 0; i < NUM; ++i) {
-        operands.push_back(new Qin<int> { i });
+        operands.push_back(Qin<int>::make(i));
     }
 
     auto zh = *operands.begin();
     for (int i = 1; i < operands.size(); ++i) {
-        zh = zh + *operands[i];
+        zh = zh + operands[i];
     }
 
     ASSERT_I(zh->get(), 4950);
