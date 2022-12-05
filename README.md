@@ -14,11 +14,12 @@ history.
 using namespace std;
 
 int main() {
-    auto hello    = new Qin<string> { "Hello " };
-    auto name     = new Qin<string>;
-    auto mark     = new Qin<string> { " !" };
+    auto hello_str = std::string("Hello ");
+    auto hello     = Qin<string>::make(hello_str);
+    auto name      = Qin<string>::make();
+    auto mark      = Qin<string>::make(" !");
     // 联合`变量`
-    auto sentence = *hello + *name + *mark;
+    auto sentence  = hello + name + mark;
 
     sentence->getter([](const string& s) {
         return s + " 🤤";
@@ -33,6 +34,7 @@ int main() {
 
     return 0;
 }
+
 ```
 
 # Run Example
@@ -66,3 +68,4 @@ ctest
 | format   | 🧾    |
 | refactor | ⚙️    |
 | update   | 🆕    |
+| WIP      | ⌛️    |

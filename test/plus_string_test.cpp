@@ -8,11 +8,11 @@
 #include <vector>
 
 int test_binary_int_ops() {
-    auto p = new Qin<std::string> { "Hello " };
-    auto q = new Qin<std::string> { "World " };
-    auto r = new Qin<std::string> { "!" };
+    auto p = Qin<std::string>::make("Hello ");
+    auto q = Qin<std::string>::make("World ");
+    auto r = Qin<std::string>::make("!");
 
-    auto zh = *p + *q + *r;
+    auto zh = p + q + r;
 
     ASSERT_S(zh->get(), std::string("Hello World !"));
 
