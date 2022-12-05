@@ -18,10 +18,8 @@ int main() {
     auto name_tmp = std::string("World");
     do {
         // 一呼百应
-        cout << hello.use_count() << " " << name.use_count() << " " << mark.use_count() << " " << sentence.use_count() << endl;
         *name = name_tmp;
         cout << sentence->get() << endl;
-        cout << hello.use_count() << " " << name.use_count() << " " << mark.use_count() << " " << sentence.use_count() << endl;
     } while (cin >> name_tmp);
 
     return 0;

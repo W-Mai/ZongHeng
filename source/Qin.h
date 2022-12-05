@@ -32,8 +32,8 @@ public:
     void bind(const std::shared_ptr<QinBase>& src);
 
     template<class T>
-    Qin<T>& into() {
-        return *reinterpret_cast<Qin<T>*>(this);
+    typename Qin<T>::SharedQin_T into() {
+        return std::static_pointer_cast<Qin<T>>(self);
     }
 
     void lian(std::shared_ptr<QinBase> q1, std::shared_ptr<QinBase> q2) {
@@ -44,8 +44,10 @@ public:
 
 template<class T>
 class Qin : public QinBase {
-    using PTR_T = std::shared_ptr<Qin<T>>;
+public:
+    using SharedQin_T = std::shared_ptr<Qin<T>>;
 
+protected:
     T                          rawValue; // 不知道怎么才能合理引用🤔，暂时先复制吧
     std::function<T()>         value;
     std::function<T()>         effect;
@@ -80,7 +82,7 @@ public:
             return rawValue;
         };
         for (auto& qin : Zong) {
-            qin->template into<T>().set(std::forward<T>(val));
+            qin->template into<T>()->set(std::forward<T>(val));
         }
     }
 
@@ -117,7 +119,7 @@ public:
     }
 
     template<class Fn>
-    PTR_T lian(std::shared_ptr<QinBase> q, Fn eff) {
+    SharedQin_T lian(std::shared_ptr<QinBase> q, Fn eff) {
         auto new_qin = Qin<T>::make(T {});
         new_qin->QinBase::lian(self, q);
         new_qin->setEff(eff);
@@ -125,11 +127,11 @@ public:
     }
 
     template<class Fn>
-    PTR_T lian(std::shared_ptr<QinBase> q) {
+    SharedQin_T lian(std::shared_ptr<QinBase> q) {
         auto new_qin = Qin<T>::make(T {});
         new_qin->QinBase::lian(self, q);
         new_qin->setEff([this, q]() -> T {
-            return Fn()(this->get(), q->template into<T>().get());
+            return Fn()(this->get(), q->template into<T>()->get());
         });
         return new_qin;
     }
@@ -147,18 +149,18 @@ public:
         setter(s);
     }
 
-    friend PTR_T operator+(PTR_T p, PTR_T q) {
+    friend SharedQin_T operator+(SharedQin_T p, SharedQin_T q) {
         return p->template lian<std::plus<T>>(q);
     }
 
-    friend PTR_T operator*(PTR_T p, PTR_T q) {
+    friend SharedQin_T operator*(SharedQin_T p, SharedQin_T q) {
         return p->template lian<std::multiplies<T>>(&q);
     }
 
     // Utils
 public:
     template<class... ARGS>
-    static PTR_T make(ARGS&&... val) {
+    static SharedQin_T make(ARGS&&... val) {
         auto ptr  = std::make_shared<Qin<T>>(val...);
         ptr->self = ptr;
         return ptr;
