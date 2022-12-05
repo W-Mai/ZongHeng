@@ -13,12 +13,18 @@ template<class T>
 class Qin;
 
 class QinBase {
+public:
+    using SharedQinBase_T = std::shared_ptr<QinBase>;
+
 protected:
-    using Zong_t = std::vector<std::shared_ptr<QinBase>>;
-    using Heng_t = std::vector<std::shared_ptr<QinBase>>;
+
+    using Zong_t = std::vector<SharedQinBase_T>;
+    using Heng_t = std::vector<SharedQinBase_T>;
 
     Zong_t Zong;
     Heng_t Heng;
+
+    SharedQinBase_T self;
 
 public:
     friend void operator<<(std::shared_ptr<QinBase> l, std::shared_ptr<QinBase> r);
@@ -113,7 +119,7 @@ public:
     template<class Fn>
     PTR_T lian(std::shared_ptr<QinBase> q, Fn eff) {
         auto new_qin = Qin<T>::make(T {});
-        new_qin->QinBase::lian(this, q);
+        new_qin->QinBase::lian(self, q);
         new_qin->setEff(eff);
         return new_qin;
     }
@@ -121,7 +127,7 @@ public:
     template<class Fn>
     PTR_T lian(std::shared_ptr<QinBase> q) {
         auto new_qin = Qin<T>::make(T {});
-        new_qin->QinBase::lian(this, q);
+        new_qin->QinBase::lian(self, q);
         new_qin->setEff([this, q]() -> T {
             return Fn()(this->get(), q->template into<T>().get());
         });
@@ -145,15 +151,7 @@ public:
         return p->template lian<std::plus<T>>(q);
     }
 
-    friend PTR_T operator+(PTR_T p, Qin<T>&& q) {
-        return p->template lian<std::plus<T>>(&q);
-    }
-
-    friend PTR_T operator*(Qin<T>& p, Qin<T>& q) {
-        return p.lian<std::multiplies<T>>(&q);
-    }
-
-    friend PTR_T operator*(PTR_T p, Qin<T>& q) {
+    friend PTR_T operator*(PTR_T p, PTR_T q) {
         return p->template lian<std::multiplies<T>>(&q);
     }
 
@@ -161,7 +159,9 @@ public:
 public:
     template<class... ARGS>
     static PTR_T make(ARGS&&... val) {
-        return std::make_shared<Qin<T>>(val...);
+        auto ptr  = std::make_shared<Qin<T>>(val...);
+        ptr->self = ptr;
+        return ptr;
     }
 };
 
