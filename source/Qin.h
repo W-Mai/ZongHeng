@@ -14,25 +14,23 @@ class Qin;
 
 class QinBase {
 protected:
-    using Zong_t = std::vector<QinBase*>;
-    using Heng_t = std::vector<QinBase*>;
+    using Zong_t = std::vector<std::shared_ptr<QinBase>>;
+    using Heng_t = std::vector<std::shared_ptr<QinBase>>;
 
     Zong_t Zong;
     Heng_t Heng;
 
 public:
-    friend void operator<<(QinBase& l, QinBase& r);
-    friend void operator<<(QinBase& l, QinBase* r);
-    friend void operator<<(QinBase* l, QinBase& r);
+    friend void operator<<(std::shared_ptr<QinBase> l, std::shared_ptr<QinBase> r);
 
-    void bind(QinBase* src);
+    void bind(const std::shared_ptr<QinBase>& src);
 
     template<class T>
     Qin<T>& into() {
         return *reinterpret_cast<Qin<T>*>(this);
     }
 
-    void lian(QinBase* q1, QinBase* q2) {
+    void lian(std::shared_ptr<QinBase> q1, std::shared_ptr<QinBase> q2) {
         Heng.push_back(q1);
         Heng.push_back(q2);
     }
@@ -75,8 +73,8 @@ public:
         value    = [=]() -> T {
             return rawValue;
         };
-        for (QinBase* qin : Zong) {
-            qin->into<T>().set(std::forward<T>(val));
+        for (auto& qin : Zong) {
+            qin->template into<T>().set(std::forward<T>(val));
         }
     }
 
@@ -113,11 +111,11 @@ public:
     }
 
     template<class Fn>
-    Qin<T>& lian(std::shared_ptr<QinBase> q, Fn eff) {
+    PTR_T lian(std::shared_ptr<QinBase> q, Fn eff) {
         auto new_qin = Qin<T>::make(T {});
         new_qin->QinBase::lian(this, q);
         new_qin->setEff(eff);
-        return *new_qin;
+        return new_qin;
     }
 
     template<class Fn>
@@ -143,8 +141,8 @@ public:
         setter(s);
     }
 
-    friend PTR_T operator+(Qin<T>& p, Qin<T>& q) {
-        return p.lian<std::plus<T>>(&q);
+    friend PTR_T operator+(PTR_T p, PTR_T q) {
+        return p->template lian<std::plus<T>>(q);
     }
 
     friend PTR_T operator+(PTR_T p, Qin<T>&& q) {
