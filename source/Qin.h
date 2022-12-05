@@ -6,6 +6,7 @@
 #define ZONGHENG_QIN_H
 
 #include <functional>
+#include <memory>
 #include <vector>
 
 template<class T>
@@ -39,6 +40,8 @@ public:
 
 template<class T>
 class Qin : public QinBase {
+    using PTR_T = std::shared_ptr<Qin<T>>;
+
     T                          rawValue; // 不知道怎么才能合理引用🤔，暂时先复制吧
     std::function<T()>         value;
     std::function<T()>         effect;
@@ -110,16 +113,16 @@ public:
     }
 
     template<class Fn>
-    Qin<T>& lian(QinBase* q, Fn eff) {
-        auto new_qin = new Qin<T> { T {} };
+    Qin<T>& lian(std::shared_ptr<QinBase> q, Fn eff) {
+        auto new_qin = Qin<T>::make(T {});
         new_qin->QinBase::lian(this, q);
         new_qin->setEff(eff);
         return *new_qin;
     }
 
     template<class Fn>
-    Qin<T>* lian(QinBase* q) {
-        auto new_qin = new Qin<T> { T {} };
+    PTR_T lian(std::shared_ptr<QinBase> q) {
+        auto new_qin = Qin<T>::make(T {});
         new_qin->QinBase::lian(this, q);
         new_qin->setEff([this, q]() -> T {
             return Fn()(this->get(), q->template into<T>().get());
@@ -140,20 +143,27 @@ public:
         setter(s);
     }
 
-    friend Qin<T>* operator+(Qin<T>& p, Qin<T>& q) {
+    friend PTR_T operator+(Qin<T>& p, Qin<T>& q) {
         return p.lian<std::plus<T>>(&q);
     }
 
-    friend Qin<T>* operator+(Qin<T>* p, Qin<T>& q) {
-        return p->lian<std::plus<T>>(&q);
+    friend PTR_T operator+(PTR_T p, Qin<T>&& q) {
+        return p->template lian<std::plus<T>>(&q);
     }
 
-    friend Qin<T>* operator*(Qin<T>& p, Qin<T>& q) {
+    friend PTR_T operator*(Qin<T>& p, Qin<T>& q) {
         return p.lian<std::multiplies<T>>(&q);
     }
 
-    friend Qin<T>* operator*(Qin<T>* p, Qin<T>& q) {
-        return p->lian<std::multiplies<T>>(&q);
+    friend PTR_T operator*(PTR_T p, Qin<T>& q) {
+        return p->template lian<std::multiplies<T>>(&q);
+    }
+
+    // Utils
+public:
+    template<class... ARGS>
+    static PTR_T make(ARGS&&... val) {
+        return std::make_shared<Qin<T>>(val...);
     }
 };
 
