@@ -86,7 +86,7 @@ public:
         }
     }
 
-    T get() {
+    const T& get() {
         T v;
         if (effect) {
             v = effect();
@@ -96,7 +96,9 @@ public:
         if (_getter) {
             v = _getter(v);
         }
-        return v;
+
+        rawValue = v;
+        return rawValue;
     }
 
     Qin<T>& operator=(T& val) {
