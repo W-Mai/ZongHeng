@@ -49,6 +49,7 @@ public:
 
 protected:
     T                          rawValue; // 不知道怎么才能合理引用🤔，暂时先复制吧
+    T                          getterValue; // 不知道怎么才能合理引用🤔，暂时先复制吧
     std::function<T()>         value;
     std::function<T()>         effect;
     std::function<T(const T&)> _setter;
@@ -78,7 +79,7 @@ public:
             val = _setter(val);
         }
         rawValue = val;
-        value    = [=]() -> T {
+        value    = [=]() -> const T& {
             return rawValue;
         };
         for (auto& qin : Zong) {
@@ -94,7 +95,8 @@ public:
             v = value();
         }
         if (_getter) {
-            v = _getter(v);
+            getterValue = _getter(v);
+            return getterValue;
         }
 
         rawValue = v;
