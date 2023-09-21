@@ -15,6 +15,11 @@ int main() {
         return s + " 🤤";
     });
 
+    sentence->setter([](const string& s) {
+        cout << "OK" << endl;
+        return s;
+    });
+
     auto name_tmp = std::string("World");
     do {
         // 一呼百应

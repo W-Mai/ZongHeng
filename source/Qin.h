@@ -36,7 +36,7 @@ public:
         return std::static_pointer_cast<Qin<T>>(self);
     }
 
-    void lian(std::shared_ptr<QinBase> q1, std::shared_ptr<QinBase> q2) {
+    void lian(SharedQinBase_T q1, SharedQinBase_T q2) {
         Heng.push_back(q1);
         Heng.push_back(q2);
     }
@@ -48,7 +48,7 @@ public:
     using SharedQin_T = std::shared_ptr<Qin<T>>;
 
 protected:
-    T                          rawValue; // 不知道怎么才能合理引用🤔，暂时先复制吧
+    T                          rawValue;    // 不知道怎么才能合理引用🤔，暂时先复制吧
     T                          getterValue; // 不知道怎么才能合理引用🤔，暂时先复制吧
     std::function<T()>         value;
     std::function<T()>         effect;
@@ -60,21 +60,13 @@ public:
         set(T {});
     }
 
-    Qin(Qin<T>& v) noexcept {
-        set(std::forward<T>(v));
-    }
-
-    explicit Qin(T& v)
+    template<class V, class = std::enable_if<std::is_same<std::remove_reference<V>, T>::value>>
+    explicit Qin(V&& v)
         : rawValue(v) {
-        set(std::forward<T>(v));
+        set(std::forward<V>(v));
     }
 
-    explicit Qin(T&& v)
-        : rawValue(v) {
-        set(std::forward<T>(v));
-    }
-
-    void set(T&& val) {
+    void set(T& val) {
         if (_setter) {
             val = _setter(val);
         }
@@ -82,8 +74,24 @@ public:
         value    = [=]() -> const T& {
             return rawValue;
         };
+        // Update
         for (auto& qin : Zong) {
             qin->template into<T>()->set(std::forward<T>(val));
+        }
+    }
+
+    void set(const T&& val) {
+        T tmp_val = val;
+        if (_setter) {
+            tmp_val = _setter(tmp_val);
+        }
+        rawValue = tmp_val;
+        value    = [=]() -> const T& {
+            return rawValue;
+        };
+        // Update
+        for (auto& qin : Zong) {
+            qin->template into<T>()->set(std::forward<T>(tmp_val));
         }
     }
 
@@ -165,7 +173,7 @@ public:
 public:
     template<class... ARGS>
     static SharedQin_T make(ARGS&&... val) {
-        auto ptr  = std::make_shared<Qin<T>>(val...);
+        auto ptr  = std::make_shared<Qin<T>>(std::forward<ARGS>(val)...);
         ptr->self = ptr;
         return ptr;
     }
