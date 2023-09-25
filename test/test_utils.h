@@ -7,9 +7,9 @@
 
 #define __ASSERT_HEADER(x, y) \
     if ((x) != (y)) { printf("%s, %s, %d, "
-#define __ASSERT_TAIL(x, y)                            \
-    __func__, __ASSERT_FILE_NAME, __LINE__, (x), (y)); \
-    return -1;                                         \
+#define __ASSERT_TAIL(x, y)                       \
+    __func__, __FILE_NAME__, __LINE__, (x), (y)); \
+    return -1;                                    \
     }
 
 #define ASSERT_I(x, y)    \
