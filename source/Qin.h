@@ -48,45 +48,39 @@ public:
     using SharedQin_T = std::shared_ptr<Qin<T>>;
 
 protected:
-    T                          rawValue;    // 不知道怎么才能合理引用🤔，暂时先复制吧
-    T                          getterValue; // 不知道怎么才能合理引用🤔，暂时先复制吧
-    std::function<T()>         value;
-    std::function<T()>         effect;
-    std::function<T(const T&)> _setter;
-    std::function<T(const T&)> _getter;
+    using NoneCVT = typename std::remove_cv<T>::type;
+
+    NoneCVT                          rawValue;    // 不知道怎么才能合理引用🤔，暂时先复制吧
+    NoneCVT                          getterValue; // 不知道怎么才能合理引用🤔，暂时先复制吧
+    std::function<NoneCVT()>         value;
+    std::function<NoneCVT()>         effect;
+    std::function<NoneCVT(const T&)> _setter;
+    std::function<NoneCVT(const T&)> _getter;
 
 public:
     Qin() noexcept {
-        set(T {});
+        set(NoneCVT {});
     }
 
-    template<class V, class = std::enable_if<std::is_same<std::remove_reference<V>, T>::value>>
+    template<class V, class = std::enable_if<
+                          std::is_same<std::remove_cv<V>, NoneCVT>::value
+                          || std::is_constructible<V, NoneCVT>::value>>
     explicit Qin(V&& v)
         : rawValue(v) {
         set(std::forward<V>(v));
     }
 
-    void set(T& val) {
-        if (_setter) {
-            val = _setter(val);
-        }
-        rawValue = val;
-        value    = [=]() -> const T& {
-            return rawValue;
-        };
-        // Update
-        for (auto& qin : Zong) {
-            qin->template into<T>()->set(std::forward<T>(val));
-        }
-    }
+    template<class V, class = std::enable_if<
+                          std::is_same<std::remove_cv<V>, NoneCVT>::value
+                          || std::is_constructible<V, NoneCVT>::value>>
+    void set(V&& val) {
+        NoneCVT tmp_val { val };
 
-    void set(const T&& val) {
-        T tmp_val = val;
         if (_setter) {
             tmp_val = _setter(tmp_val);
         }
         rawValue = tmp_val;
-        value    = [=]() -> const T& {
+        value    = [=]() -> const NoneCVT& {
             return rawValue;
         };
         // Update
@@ -95,8 +89,8 @@ public:
         }
     }
 
-    const T& get() {
-        T v;
+    const NoneCVT& get() {
+        NoneCVT v;
         if (effect) {
             v = effect();
         } else {
@@ -111,13 +105,11 @@ public:
         return rawValue;
     }
 
-    Qin<T>& operator=(T& val) {
-        set(std::forward<T>(val));
-        return *this;
-    }
-
-    Qin<T>& operator=(T&& val) {
-        set(std::forward<T>(val));
+    template<class V, class = std::enable_if<
+                          std::is_same<std::remove_cv<V>, NoneCVT>::value
+                          || std::is_constructible<V, NoneCVT>::value>>
+    Qin<T>& operator=(V&& val) {
+        set(std::forward<V>(val));
         return *this;
     }
 
@@ -140,7 +132,7 @@ public:
 
     template<class Fn>
     SharedQin_T lian(std::shared_ptr<QinBase> q) {
-        auto new_qin = Qin<T>::make(T {});
+        auto new_qin = Qin<NoneCVT>::make(T {});
         new_qin->QinBase::lian(self, q);
         new_qin->setEff([this, q]() -> T {
             return Fn()(this->get(), q->template into<T>()->get());
