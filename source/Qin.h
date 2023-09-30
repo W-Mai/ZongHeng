@@ -12,6 +12,12 @@
 template<class T>
 class Qin;
 
+#define FORWARD_CONSTRAINT(TYPE, TYPE_INNER) <class TYPE, \
+    class = std::enable_if<                                                \
+        std::is_same<std::remove_cv<TYPE>, TYPE_INNER>::value              \
+        || std::is_constructible<TYPE, TYPE_INNER>::value                  \
+        || std::is_convertible<TYPE, TYPE_INNER>::value>>
+
 class QinBase {
 public:
     using SharedQinBase_T = std::shared_ptr<QinBase>;
@@ -62,19 +68,13 @@ public:
         set(NoneCVT {});
     }
 
-    template<class V, class = std::enable_if<
-                          std::is_same<std::remove_cv<V>, NoneCVT>::value
-                          || std::is_constructible<V, NoneCVT>::value>>
-    explicit Qin(V&& v)
+    template FORWARD_CONSTRAINT(V, NoneCVT) explicit Qin(V&& v)
         : rawValue(v) {
         set(std::forward<V>(v));
     }
 
-    template<class V, class = std::enable_if<
-                          std::is_same<std::remove_cv<V>, NoneCVT>::value
-                          || std::is_constructible<V, NoneCVT>::value>>
-    void set(V&& val) {
-        NoneCVT tmp_val { val };
+    template FORWARD_CONSTRAINT(V, NoneCVT) void set(V&& val) {
+        NoneCVT tmp_val { static_cast<NoneCVT>(val) };
 
         if (_setter) {
             tmp_val = _setter(tmp_val);
@@ -111,10 +111,7 @@ public:
         return rawValue;
     }
 
-    template<class V, class = std::enable_if<
-                          std::is_same<std::remove_cv<V>, NoneCVT>::value
-                          || std::is_constructible<V, NoneCVT>::value>>
-    Qin<T>& operator=(V&& val) {
+    template FORWARD_CONSTRAINT(V, NoneCVT) Qin<T>& operator=(V&& val) {
         set(std::forward<V>(val));
         return *this;
     }
@@ -178,5 +175,7 @@ public:
 };
 
 #include "QinUtils.h"
+
+#undef FORWARD_CONSTRAINT
 
 #endif // ZONGHENG_QIN_H
