@@ -36,9 +36,9 @@ public:
         return std::static_pointer_cast<Qin<T>>(self);
     }
 
-    void lian(SharedQinBase_T q1, SharedQinBase_T q2) {
-        Heng.push_back(q1);
-        Heng.push_back(q2);
+    void lian(const SharedQinBase_T& q1, const SharedQinBase_T& q2) {
+        q1->Heng.push_back(self);
+        q2->Heng.push_back(self);
     }
 };
 
@@ -86,6 +86,12 @@ public:
         // Update
         for (auto& qin : Zong) {
             qin->template into<T>()->set(std::forward<T>(tmp_val));
+        }
+
+        for (auto& heng : Heng) {
+            auto& h_ef = heng->template into<T>()->effect;
+            if (h_ef)
+                heng->template into<T>()->set(std::forward<T>(h_ef()));
         }
     }
 

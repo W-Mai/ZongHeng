@@ -9,14 +9,14 @@ int main() {
     auto name      = Qin<string>::make();
     auto mark      = Qin<string>::make(" !");
     // 联合`变量`
-    auto sentence = hello + name + mark;
+    auto sentence  = hello + name + mark;
 
     sentence->getter([](const string& s) {
         return s + " 🤤";
     });
 
     sentence->setter([](const string& s) {
-        cout << "OK" << endl;
+        cout << "SETTER: " << s << endl;
         return s;
     });
 
