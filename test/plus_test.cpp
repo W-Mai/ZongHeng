@@ -39,6 +39,7 @@ int test_binary_double_ops() {
 int test_binary_many_int_ops() {
     const int                          NUM = 100;
     std::vector<Qin<int>::SharedQin_T> operands;
+    operands.reserve(NUM);
     for (int i = 0; i < NUM; ++i) {
         operands.push_back(Qin<int>::make(i));
     }
