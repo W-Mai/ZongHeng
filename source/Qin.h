@@ -174,6 +174,23 @@ public:
     }
 };
 
+template<class IN_T, class OUT_T>
+class Yi : public QinBase {
+public:
+    using SharedYi_T = std::shared_ptr<Yi>;
+
+    typename Qin<IN_T>::SharedQin_T  in;
+    typename Qin<OUT_T>::SharedQin_T out;
+
+public:
+
+    Yi(Qin<IN_T>::SharedQin_T in, Qin<OUT_T>::SharedQin_T out)
+        : in(in)
+        , out(out) {
+        QinBase::lian(in, out);
+    }
+};
+
 #include "QinUtils.h"
 
 #undef FORWARD_CONSTRAINT
