@@ -8,8 +8,16 @@ int main() {
     auto hello     = Qin<string>::make(hello_str);
     auto name      = Qin<string>::make();
     auto mark      = Qin<string>::make(" !");
+
+    auto init = {
+        string { "Hello " }, string { "World" }
+    };
+    auto strings = Qin<vector<string>>::make(init);
+
+    auto yi = new Yi<vector<string>, string>(strings);
+
     // 联合`变量`
-    auto sentence  = hello + name + mark;
+    auto sentence = hello + name + mark;
 
     sentence->getter([](const string& s) {
         return s + " 🤤";

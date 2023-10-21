@@ -179,15 +179,33 @@ class Yi : public QinBase {
 public:
     using SharedYi_T = std::shared_ptr<Yi>;
 
+protected:
+    using NoneCVT = typename std::remove_cv<OUT_T>::type;
+
     typename Qin<IN_T>::SharedQin_T  in;
     typename Qin<OUT_T>::SharedQin_T out;
 
+    std::function<NoneCVT()>            effect;
+    std::function<NoneCVT(const IN_T&)> _setter;
+    std::function<IN_T(const NoneCVT&)> _getter;
+
 public:
 
-    Yi(Qin<IN_T>::SharedQin_T in, Qin<OUT_T>::SharedQin_T out)
-        : in(in)
-        , out(out) {
-        QinBase::lian(in, out);
+    explicit Yi(typename Qin<IN_T>::SharedQin_T in)
+        : in(in) {
+    }
+
+    void setter(decltype(_setter) s) {
+        _setter = s;
+    }
+
+    void getter(decltype(_getter) g) {
+        _getter = g;
+    }
+
+    void hook(decltype(_getter) g = nullptr, decltype(_setter) s = nullptr) {
+        getter(g);
+        setter(s);
     }
 };
 
