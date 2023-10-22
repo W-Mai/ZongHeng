@@ -9,14 +9,26 @@
 #include <memory>
 #include <vector>
 
-template<class T>
-class Qin;
+template<class INPUT_TYPE, class OUTPUT_TYPE>
+class Yi;
 
 #define FORWARD_CONSTRAINT(TYPE, TYPE_INNER) <class TYPE, \
     class = std::enable_if<                                                \
         std::is_same<std::remove_cv<TYPE>, TYPE_INNER>::value              \
         || std::is_constructible<TYPE, TYPE_INNER>::value                  \
         || std::is_convertible<TYPE, TYPE_INNER>::value>>
+
+template<class INPUT, class OUTPUT>
+typename std::enable_if<std::is_same<typename std::is_convertible<INPUT, OUTPUT>::type, std::true_type>::value, OUTPUT>::type
+convert(INPUT&& input) {
+    return static_cast<OUTPUT>(input);
+}
+
+template<class INPUT, class OUTPUT>
+typename std::enable_if<std::is_same<typename std::is_convertible<INPUT, OUTPUT>::type, std::false_type>::value, OUTPUT>::type
+convert(INPUT&&) {
+    return OUTPUT {};
+}
 
 class QinBase {
 public:
@@ -37,9 +49,9 @@ public:
 
     void bind(const std::shared_ptr<QinBase>& src);
 
-    template<class T>
-    typename Qin<T>::SharedQin_T into() {
-        return std::static_pointer_cast<Qin<T>>(self);
+    template<class IN, class OUT>
+    typename Yi<IN, OUT>::SharedYi_T into() {
+        return std::static_pointer_cast<Yi<IN, OUT>>(self);
     }
 
     void lian(const SharedQinBase_T& q1, const SharedQinBase_T& q2) {
@@ -48,55 +60,62 @@ public:
     }
 };
 
-template<class T>
-class Qin : public QinBase {
+template<class INPUT_TYPE, class OUTPUT_TYPE>
+class Yi : public QinBase {
 public:
-    using SharedQin_T = std::shared_ptr<Qin<T>>;
+    using SharedYi_T = std::shared_ptr<Yi<INPUT_TYPE, OUTPUT_TYPE>>;
 
 protected:
-    using NoneCVT = typename std::remove_cv<T>::type;
+    using NoneCVTInput  = typename std::remove_cv<INPUT_TYPE>::type;
+    using NoneCVTOutput = typename std::remove_cv<OUTPUT_TYPE>::type;
 
-    NoneCVT                          rawValue;    // 不知道怎么才能合理引用🤔，暂时先复制吧
-    NoneCVT                          getterValue; // 不知道怎么才能合理引用🤔，暂时先复制吧
-    std::function<NoneCVT()>         value;
-    std::function<NoneCVT()>         effect;
-    std::function<NoneCVT(const T&)> _setter;
-    std::function<NoneCVT(const T&)> _getter;
+    NoneCVTInput                                      rawValue;
+    NoneCVTOutput                                     getterValue;
+    std::function<NoneCVTInput()>                     value;
+    std::function<NoneCVTInput()>                     effect;
+    std::function<NoneCVTInput(const NoneCVTOutput&)> _setter;
+    std::function<NoneCVTOutput(const NoneCVTInput&)> _getter;
 
 public:
-    Qin() noexcept {
-        set(NoneCVT {});
+    Yi() noexcept {
+        set(NoneCVTInput {});
     }
 
-    template FORWARD_CONSTRAINT(V, NoneCVT) explicit Qin(V&& v)
+    template FORWARD_CONSTRAINT(V, NoneCVTInput) explicit Yi(V&& v)
         : rawValue(v) {
-        set(std::forward<V>(v));
+        set_raw(std::forward<V>(v));
     }
 
-    template FORWARD_CONSTRAINT(V, NoneCVT) void set(V&& val) {
-        NoneCVT tmp_val { static_cast<NoneCVT>(val) };
+    template FORWARD_CONSTRAINT(V, NoneCVTInput) void set_raw(V&& val) {
+        rawValue = val;
+        value    = [=]() -> const NoneCVTInput& {
+            return rawValue;
+        };
+    }
+
+    template FORWARD_CONSTRAINT(V, NoneCVTInput) void set(V&& val) {
+        NoneCVTInput tmp_val { static_cast<NoneCVTInput>(val) };
 
         if (_setter) {
             tmp_val = _setter(tmp_val);
         }
-        rawValue = tmp_val;
-        value    = [=]() -> const NoneCVT& {
-            return rawValue;
-        };
+
+        set_raw(std::forward<V>(tmp_val));
+
         // Update
-        for (auto& qin : Zong) {
-            qin->template into<T>()->set(std::forward<T>(tmp_val));
+        for (auto& yi : Zong) {
+            yi->template into<INPUT_TYPE, OUTPUT_TYPE>()->set(std::forward<INPUT_TYPE>(tmp_val));
         }
 
         for (auto& heng : Heng) {
-            auto& h_ef = heng->template into<T>()->effect;
+            auto& h_ef = heng->template into<INPUT_TYPE, OUTPUT_TYPE>()->effect;
             if (h_ef)
-                heng->template into<T>()->set(std::forward<T>(h_ef()));
+                heng->template into<INPUT_TYPE, OUTPUT_TYPE>()->set(std::forward<INPUT_TYPE>(h_ef()));
         }
     }
 
-    const NoneCVT& get() {
-        NoneCVT v;
+    NoneCVTOutput get() {
+        NoneCVTInput v;
         if (effect) {
             v = effect();
         } else {
@@ -108,15 +127,15 @@ public:
         }
 
         rawValue = v;
-        return rawValue;
+        return convert<INPUT_TYPE, OUTPUT_TYPE>(std::forward<INPUT_TYPE>(rawValue));
     }
 
-    template FORWARD_CONSTRAINT(V, NoneCVT) Qin<T>& operator=(V&& val) {
+    template FORWARD_CONSTRAINT(V, NoneCVTInput) Yi<INPUT_TYPE, OUTPUT_TYPE>& operator=(V&& val) {
         set(std::forward<V>(val));
         return *this;
     }
 
-    explicit operator T() {
+    explicit operator INPUT_TYPE() {
         return get();
     }
 
@@ -126,19 +145,19 @@ public:
     }
 
     template<class Fn>
-    SharedQin_T lian(std::shared_ptr<QinBase> q, Fn eff) {
-        auto new_qin = Qin<T>::make(T {});
+    SharedYi_T lian(std::shared_ptr<QinBase> q, Fn eff) {
+        auto new_qin = Yi<INPUT_TYPE, OUTPUT_TYPE>::make(INPUT_TYPE {});
         new_qin->QinBase::lian(self, q);
         new_qin->setEff(eff);
         return new_qin;
     }
 
     template<class Fn>
-    SharedQin_T lian(std::shared_ptr<QinBase> q) {
-        auto new_qin = Qin<NoneCVT>::make(T {});
+    SharedYi_T lian(std::shared_ptr<QinBase> q) {
+        auto new_qin = Yi<NoneCVTInput, NoneCVTOutput>::make(INPUT_TYPE {});
         new_qin->QinBase::lian(self, q);
-        new_qin->setEff([this, q]() -> T {
-            return Fn()(this->get(), q->template into<T>()->get());
+        new_qin->setEff([this, q]() -> INPUT_TYPE {
+            return Fn()(this->get(), q->template into<INPUT_TYPE, OUTPUT_TYPE>()->get());
         });
         return new_qin;
     }
@@ -156,6 +175,21 @@ public:
         setter(s);
     }
 
+    // Utils
+public:
+    template<class... ARGS>
+    static SharedYi_T make(ARGS&&... val) {
+        auto ptr  = std::make_shared<Yi<INPUT_TYPE, OUTPUT_TYPE>>(std::forward<ARGS>(val)...);
+        ptr->self = ptr;
+        return ptr;
+    }
+};
+
+template<class T>
+class Qin : public Yi<T, T> {
+public:
+    using SharedQin_T = std::shared_ptr<Qin<T>>;
+
     friend SharedQin_T operator+(SharedQin_T p, SharedQin_T q) {
         return p->template lian<std::plus<T>>(q);
     }
@@ -164,48 +198,29 @@ public:
         return p->template lian<std::multiplies<T>>(&q);
     }
 
-    // Utils
-public:
+    template<class Fn>
+    SharedQin_T lian(std::shared_ptr<QinBase> q, Fn eff) {
+        auto new_qin = Qin<T>::make(T {});
+        new_qin->QinBase::lian(this->self, q);
+        new_qin->setEff(eff);
+        return new_qin;
+    }
+
+    template<class Fn>
+    SharedQin_T lian(std::shared_ptr<QinBase> q) {
+        auto new_qin = Qin<T>::make(T {});
+        new_qin->QinBase::lian(this->self, q);
+        new_qin->setEff([this, q]() -> T {
+            return Fn()(this->get(), q->template into<T, T>()->get());
+        });
+        return new_qin;
+    }
+
     template<class... ARGS>
     static SharedQin_T make(ARGS&&... val) {
-        auto ptr  = std::make_shared<Qin<T>>(std::forward<ARGS>(val)...);
+        auto ptr  = std::static_pointer_cast<Qin<T>>(Yi<T, T>::make(std::forward<ARGS>(val)...));
         ptr->self = ptr;
         return ptr;
-    }
-};
-
-template<class IN_T, class OUT_T>
-class Yi : public QinBase {
-public:
-    using SharedYi_T = std::shared_ptr<Yi>;
-
-protected:
-    using NoneCVT = typename std::remove_cv<OUT_T>::type;
-
-    typename Qin<IN_T>::SharedQin_T  in;
-    typename Qin<OUT_T>::SharedQin_T out;
-
-    std::function<NoneCVT()>            effect;
-    std::function<NoneCVT(const IN_T&)> _setter;
-    std::function<IN_T(const NoneCVT&)> _getter;
-
-public:
-
-    explicit Yi(typename Qin<IN_T>::SharedQin_T in)
-        : in(in) {
-    }
-
-    void setter(decltype(_setter) s) {
-        _setter = s;
-    }
-
-    void getter(decltype(_getter) g) {
-        _getter = g;
-    }
-
-    void hook(decltype(_getter) g = nullptr, decltype(_setter) s = nullptr) {
-        getter(g);
-        setter(s);
     }
 };
 
