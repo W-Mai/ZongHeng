@@ -93,18 +93,23 @@ public:
         };
     }
 
-    template FORWARD_CONSTRAINT(V, NoneCVTInput) void set(V&& val) {
-        NoneCVTInput tmp_val { static_cast<NoneCVTInput>(val) };
+    template FORWARD_CONSTRAINT(V, NoneCVTInput) void set_inner(V&& val) {
+        rawValue = val;
+    }
+
+    template FORWARD_CONSTRAINT(V, NoneCVTOutput) void set(V&& val) {
+        NoneCVTInput  tmp_out ;
+        NoneCVTOutput tmp_val { static_cast<NoneCVTOutput>(val) };
 
         if (_setter) {
-            tmp_val = _setter(tmp_val);
+            tmp_out = _setter(tmp_val);
         }
 
-        set_raw(std::forward<V>(tmp_val));
+        set_raw(std::forward<NoneCVTInput>(tmp_out));
 
         // Update
         for (auto& yi : Zong) {
-            yi->template into<INPUT_TYPE, OUTPUT_TYPE>()->set(std::forward<INPUT_TYPE>(tmp_val));
+            yi->template into<INPUT_TYPE, OUTPUT_TYPE>()->set(std::forward<INPUT_TYPE>(tmp_out));
         }
 
         for (auto& heng : Heng) {
@@ -130,7 +135,7 @@ public:
         return convert<INPUT_TYPE, OUTPUT_TYPE>(std::forward<INPUT_TYPE>(rawValue));
     }
 
-    template FORWARD_CONSTRAINT(V, NoneCVTInput) Yi<INPUT_TYPE, OUTPUT_TYPE>& operator=(V&& val) {
+    template FORWARD_CONSTRAINT(V, NoneCVTOutput) Yi<INPUT_TYPE, OUTPUT_TYPE>& operator=(V&& val) {
         set(std::forward<V>(val));
         return *this;
     }

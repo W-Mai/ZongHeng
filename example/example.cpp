@@ -30,8 +30,27 @@ int main() {
     auto init = {
         string { "Hello " }, string { "World" }
     };
-    auto strings = Qin<vector<string>>::make(init);
+    auto strings = Yi<vector<string>, string>::make(init);
 
+    strings->hook(
+        [](const vector<string>& vec) -> string {
+            string ret;
+            for (const auto& s : vec) {
+                ret += s;
+            }
+            return ret;
+        },
+        [](const string& s) -> vector<string> {
+            vector<string> ret;
+            ret.push_back(s);
+            return ret;
+        });
+
+    *strings = string("Hello World !");
+
+    cout << strings->get() << endl;
+
+    return 0;
     // 联合`变量`
     auto sentence = hello + name + mark;
 
@@ -47,7 +66,7 @@ int main() {
     auto name_tmp = std::string("World");
     do {
         // 一呼百应
-//        *name = name_tmp;
+        //        *name = name_tmp;
         cout << sentence->get() << endl;
     } while (cin >> name_tmp);
 
