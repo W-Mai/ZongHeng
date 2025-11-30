@@ -44,3 +44,8 @@ add_test(
         NAME lian_test
         COMMAND $<TARGET_FILE:lian_test>
 )
+
+add_test(
+        NAME yi_transform_test
+        COMMAND $<TARGET_FILE:yi_transform_test>
+)

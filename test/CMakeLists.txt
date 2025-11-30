@@ -12,3 +12,6 @@ target_link_libraries(plus_string_test ZongHeng)
 
 add_executable(lian_test lian_test.cpp)
 target_link_libraries(lian_test ZongHeng)
+
+add_executable(yi_transform_test yi_transform_test.cpp)
+target_link_libraries(yi_transform_test ZongHeng)
