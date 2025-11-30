@@ -54,3 +54,8 @@ add_test(
         NAME type_safety_test
         COMMAND $<TARGET_FILE:type_safety_test>
 )
+
+add_test(
+        NAME operators_test
+        COMMAND $<TARGET_FILE:operators_test>
+)

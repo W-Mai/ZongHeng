@@ -67,6 +67,13 @@ public:
 
     void bind(const std::shared_ptr<QinBase>& src);
 
+    // Public accessors for dependency graph
+    const Zong_t& getZong() const { return Zong; }
+    const Heng_t& getHeng() const { return Heng; }
+
+    size_t getZongCount() const { return Zong.size(); }
+    size_t getHengCount() const { return Heng.size(); }
+
     /**
      * Type-safe conversion to Yi<IN, OUT>
      * @throws std::runtime_error if type mismatch

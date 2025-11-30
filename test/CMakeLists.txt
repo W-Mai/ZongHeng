@@ -18,3 +18,6 @@ target_link_libraries(yi_transform_test ZongHeng)
 
 add_executable(type_safety_test type_safety_test.cpp)
 target_link_libraries(type_safety_test ZongHeng)
+
+add_executable(operators_test operators_test.cpp)
+target_link_libraries(operators_test ZongHeng)

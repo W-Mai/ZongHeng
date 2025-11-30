@@ -15,6 +15,9 @@
 #include "nodes/Yi.h"
 #include "nodes/Qin.h"
 
+// Operations
+#include "operations/Operators.h"
+
 // Utilities
 #include "QinUtils.h"
 

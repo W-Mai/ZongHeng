@@ -18,13 +18,38 @@ public:
 
     using Yi<T, T>::operator=;
 
-    // Operator overloads for arithmetic composition
+    // Arithmetic operators
     friend SharedQin_T operator+(SharedQin_T p, SharedQin_T q) {
         return p->template lian<std::plus<T>>(q);
     }
 
+    friend SharedQin_T operator-(SharedQin_T p, SharedQin_T q) {
+        return p->template lian<std::minus<T>>(q);
+    }
+
     friend SharedQin_T operator*(SharedQin_T p, SharedQin_T q) {
         return p->template lian<std::multiplies<T>>(q);
+    }
+
+    friend SharedQin_T operator/(SharedQin_T p, SharedQin_T q) {
+        return p->template lian<std::divides<T>>(q);
+    }
+
+    friend SharedQin_T operator%(SharedQin_T p, SharedQin_T q) {
+        return p->template lian<std::modulus<T>>(q);
+    }
+
+    // Bitwise operators
+    friend SharedQin_T operator&(SharedQin_T p, SharedQin_T q) {
+        return p->template lian<std::bit_and<T>>(q);
+    }
+
+    friend SharedQin_T operator|(SharedQin_T p, SharedQin_T q) {
+        return p->template lian<std::bit_or<T>>(q);
+    }
+
+    friend SharedQin_T operator^(SharedQin_T p, SharedQin_T q) {
+        return p->template lian<std::bit_xor<T>>(q);
     }
 
     template<class Fn>
