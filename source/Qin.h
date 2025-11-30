@@ -7,6 +7,9 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
+#include <stdexcept>
+#include <typeinfo>
 #include <type_traits>
 #include <vector>
 
@@ -20,20 +23,22 @@ class Yi;
         || std::is_convertible<TYPE, TYPE_INNER>::value>>
 
 template<class INPUT, class OUTPUT>
-typename std::enable_if<std::is_same<typename std::is_convertible<INPUT, OUTPUT>::type, std::true_type>::value, OUTPUT>::type
-convert(const INPUT& input) {
-    return static_cast<OUTPUT>(input);
-}
-
-template<class INPUT, class OUTPUT>
-typename std::enable_if<std::is_same<typename std::is_convertible<INPUT, OUTPUT>::type, std::false_type>::value, OUTPUT>::type
-convert(const INPUT&) {
-    return OUTPUT {};
+OUTPUT convert(const INPUT& input) {
+    if constexpr (std::is_convertible<INPUT, OUTPUT>::value) {
+        return static_cast<OUTPUT>(input);
+    } else {
+        throw std::runtime_error(
+            std::string("Type conversion not possible: ") +
+            typeid(INPUT).name() + " -> " + typeid(OUTPUT).name()
+        );
+    }
 }
 
 class QinBase {
 public:
     using SharedQinBase_T = std::shared_ptr<QinBase>;
+
+    virtual ~QinBase() = default;
 
 protected:
 
@@ -52,7 +57,14 @@ public:
 
     template<class IN, class OUT>
     typename Yi<IN, OUT>::SharedYi_T into() {
-        return std::static_pointer_cast<Yi<IN, OUT>>(self);
+        auto result = std::dynamic_pointer_cast<Yi<IN, OUT>>(self);
+        if (!result) {
+            throw std::runtime_error(
+                std::string("Type mismatch in into(): cannot convert to Yi<") +
+                typeid(IN).name() + ", " + typeid(OUT).name() + ">"
+            );
+        }
+        return result;
     }
 
     void lian(const SharedQinBase_T& q1, const SharedQinBase_T& q2) {
@@ -110,15 +122,23 @@ public:
 
         set_raw(std::forward<NoneCVTInput>(tmp_out));
 
-        // Update
+        // Update - only propagate to compatible types
         for (auto& yi : Zong) {
-            yi->template into<INPUT_TYPE, OUTPUT_TYPE>()->set(std::forward<NoneCVTOutput>(tmp_val));
+            try {
+                yi->template into<INPUT_TYPE, OUTPUT_TYPE>()->set(std::forward<NoneCVTOutput>(tmp_val));
+            } catch (const std::runtime_error&) {
+                // Skip incompatible type nodes
+            }
         }
 
         for (auto& heng : Heng) {
-            auto& h_ef = heng->template into<INPUT_TYPE, OUTPUT_TYPE>()->effect;
-            if (h_ef)
-                heng->template into<INPUT_TYPE, OUTPUT_TYPE>()->set(h_ef());
+            try {
+                auto& h_ef = heng->template into<INPUT_TYPE, OUTPUT_TYPE>()->effect;
+                if (h_ef)
+                    heng->template into<INPUT_TYPE, OUTPUT_TYPE>()->set(h_ef());
+            } catch (const std::runtime_error&) {
+                // Skip incompatible type nodes
+            }
         }
     }
 

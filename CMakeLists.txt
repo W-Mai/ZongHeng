@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 project(example)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 # set(DISABLE_ASAN true) # comment this line to enable ASAN(Address Sanitizer)
 
@@ -48,4 +48,9 @@ add_test(
 add_test(
         NAME yi_transform_test
         COMMAND $<TARGET_FILE:yi_transform_test>
+)
+
+add_test(
+        NAME type_safety_test
+        COMMAND $<TARGET_FILE:type_safety_test>
 )
