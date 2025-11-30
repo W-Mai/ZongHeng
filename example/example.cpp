@@ -21,11 +21,8 @@ public:
     }
 };
 
-int main() {
-    auto hello_str = std::string("Hello ");
-    auto hello     = Qin<string>::make(hello_str);
-    auto name      = Qin<string>::make();
-    auto mark      = Qin<string>::make(" !");
+void example_yi_vector_to_string() {
+    cout << "=== Example 1: Yi vector<string> to string ===" << endl;
 
     auto init = {
         string { "Hello " }, string { "World" }
@@ -42,15 +39,26 @@ int main() {
         },
         [](const string& s) -> vector<string> {
             vector<string> ret;
-            ret.push_back(s);
+            ret.reserve(s.length());
+            for (size_t i = 0; i < s.length(); i += 2) {
+                ret.emplace_back(1, s[i]);
+            }
             return ret;
         });
 
     *strings = string("Hello World !");
-
     cout << strings->get() << endl;
+    cout << endl;
+}
 
-    return 0;
+void example_qin_composition() {
+    cout << "=== Example 2: Qin composition with operators ===" << endl;
+
+    auto hello_str = std::string("Hello ");
+    auto hello     = Qin<string>::make(hello_str);
+    auto name      = Qin<string>::make("World");
+    auto mark      = Qin<string>::make(" !");
+
     // 联合`变量`
     auto sentence = hello + name + mark;
 
@@ -58,41 +66,45 @@ int main() {
         return s + " 🤤";
     });
 
-    sentence->setter([](const string& s) {
-        cout << "SETTER: " << s << endl;
-        return s;
+    cout << "Initial: " << sentence->get() << endl;
+
+    // 一呼百应
+    *name = string("China🇨🇳");
+    cout << "After change: " << sentence->get() << endl;
+    cout << endl;
+}
+
+void example_yi_type_transform() {
+    cout << "=== Example 3: Yi type transformation (string to int) ===" << endl;
+
+    auto hello_str = std::string("Hello World !");
+    auto world     = Yi<string, int>::make(hello_str);
+
+    // Yi<string, int> uses getter to transform string to int (length)
+    world->getter([](const string& s) {
+        cout << "  [getter] Converting string \"" << s << "\" to length" << endl;
+        return static_cast<int>(s.length());
     });
 
-    auto name_tmp = std::string("World");
-    do {
-        // 一呼百应
-        //        *name = name_tmp;
-        cout << sentence->get() << endl;
-    } while (cin >> name_tmp);
+    // Yi<string, int> uses setter to transform int back to string
+    world->setter([](const int& len) {
+        cout << "  [setter] Converting length " << len << " to string" << endl;
+        return string(len, '*');
+    });
 
-    //    auto hello = Qin<string>::make(hello_str);
-    //    auto world = Yi<string, int>::make(hello_str);
-    //
-    //    Text text(hello);
-    //
-    //    *hello = string("Hello World !");
-    //
-    //    world << hello;
-    //
-    //    auto hello_world = world->lian(hello, [hello, world]() {
-    //        return hello->get() + to_string(world->get());
-    //    });
-    //
-    //    world->getter([](const string& s) {
-    //        return s.length();
-    //    });
-    //
-    //    hello_world->getter([](const string& s) {
-    //        return s.length();
-    //    });
-    //
-    //    cout << world->get() << endl;
-    //    cout << hello_world->get() << endl;
+    cout << "Getting value (triggers getter): " << world->get() << endl;
+
+    // Set using the OUTPUT type (int)
+    cout << "\nSetting value to 8 (triggers setter):" << endl;
+    *world = 8;
+    cout << "Getting new value: " << world->get() << endl;
+    cout << endl;
+}
+
+int main() {
+    example_yi_vector_to_string();
+    example_qin_composition();
+    example_yi_type_transform();
 
     return 0;
 }

@@ -17,5 +17,5 @@ void QinBase::bind(const std::shared_ptr<QinBase>& src) {
         return;
     }
 
-    src_zong.push_back(std::shared_ptr<QinBase>(this));
+    src_zong.push_back(self);
 }

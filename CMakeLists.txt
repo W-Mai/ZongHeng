@@ -3,7 +3,7 @@ project(example)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(DISABLE_ASAN true) # comment this line to enable ASAN(Address Sanitizer)
+# set(DISABLE_ASAN true) # comment this line to enable ASAN(Address Sanitizer)
 
 # Address Sanitizer
 if (NOT DISABLE_ASAN)
@@ -38,4 +38,9 @@ add_test(
 add_test(
         NAME plus_string_test
         COMMAND $<TARGET_FILE:plus_string_test>
+)
+
+add_test(
+        NAME lian_test
+        COMMAND $<TARGET_FILE:lian_test>
 )

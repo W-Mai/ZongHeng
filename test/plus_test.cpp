@@ -6,7 +6,7 @@
 #include "test_utils.h"
 #include <vector>
 
-int test_binary_string_ops() {
+int test_binary_int_ops() {
     auto p = Qin<int>::make(10);
     auto q = Qin<int>::make(30);
     auto r = Qin<int>::make(37);
@@ -58,7 +58,7 @@ int test_binary_many_int_ops() {
 
 int main() {
     auto tests = {
-        test_binary_string_ops(),
+        test_binary_int_ops(),
         test_binary_double_ops(),
         test_binary_many_int_ops()
     };

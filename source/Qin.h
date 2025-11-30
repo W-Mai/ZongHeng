@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 template<class INPUT_TYPE, class OUTPUT_TYPE>
@@ -20,13 +21,13 @@ class Yi;
 
 template<class INPUT, class OUTPUT>
 typename std::enable_if<std::is_same<typename std::is_convertible<INPUT, OUTPUT>::type, std::true_type>::value, OUTPUT>::type
-convert(INPUT&& input) {
+convert(const INPUT& input) {
     return static_cast<OUTPUT>(input);
 }
 
 template<class INPUT, class OUTPUT>
 typename std::enable_if<std::is_same<typename std::is_convertible<INPUT, OUTPUT>::type, std::false_type>::value, OUTPUT>::type
-convert(INPUT&&) {
+convert(const INPUT&) {
     return OUTPUT {};
 }
 
@@ -72,7 +73,7 @@ protected:
     NoneCVTInput                                      rawValue;
     NoneCVTOutput                                     getterValue;
     std::function<NoneCVTInput()>                     value;
-    std::function<NoneCVTInput()>                     effect;
+    std::function<NoneCVTOutput()>                    effect;
     std::function<NoneCVTInput(const NoneCVTOutput&)> _setter;
     std::function<NoneCVTOutput(const NoneCVTInput&)> _getter;
 
@@ -98,41 +99,41 @@ public:
     }
 
     template FORWARD_CONSTRAINT(V, NoneCVTOutput) void set(V&& val) {
-        NoneCVTInput  tmp_out ;
+        NoneCVTInput  tmp_out;
         NoneCVTOutput tmp_val { static_cast<NoneCVTOutput>(val) };
 
         if (_setter) {
             tmp_out = _setter(tmp_val);
+        } else {
+            tmp_out = convert<NoneCVTOutput, NoneCVTInput>(std::move(tmp_val));
         }
 
         set_raw(std::forward<NoneCVTInput>(tmp_out));
 
         // Update
         for (auto& yi : Zong) {
-            yi->template into<INPUT_TYPE, OUTPUT_TYPE>()->set(std::forward<INPUT_TYPE>(tmp_out));
+            yi->template into<INPUT_TYPE, OUTPUT_TYPE>()->set(std::forward<NoneCVTOutput>(tmp_val));
         }
 
         for (auto& heng : Heng) {
             auto& h_ef = heng->template into<INPUT_TYPE, OUTPUT_TYPE>()->effect;
             if (h_ef)
-                heng->template into<INPUT_TYPE, OUTPUT_TYPE>()->set(std::forward<INPUT_TYPE>(h_ef()));
+                heng->template into<INPUT_TYPE, OUTPUT_TYPE>()->set(h_ef());
         }
     }
 
     NoneCVTOutput get() {
-        NoneCVTInput v;
         if (effect) {
-            v = effect();
-        } else {
-            v = value();
+            return effect();
         }
+
+        const NoneCVTInput v = value();
         if (_getter) {
             getterValue = _getter(v);
             return getterValue;
         }
 
-        rawValue = v;
-        return convert<INPUT_TYPE, OUTPUT_TYPE>(std::forward<INPUT_TYPE>(rawValue));
+        return convert<INPUT_TYPE, OUTPUT_TYPE>(v);
     }
 
     template FORWARD_CONSTRAINT(V, NoneCVTOutput) Yi<INPUT_TYPE, OUTPUT_TYPE>& operator=(V&& val) {
@@ -140,7 +141,7 @@ public:
         return *this;
     }
 
-    explicit operator INPUT_TYPE() {
+    explicit operator NoneCVTOutput() {
         return get();
     }
 
@@ -195,12 +196,14 @@ class Qin : public Yi<T, T> {
 public:
     using SharedQin_T = std::shared_ptr<Qin<T>>;
 
+    using Yi<T, T>::operator=;
+
     friend SharedQin_T operator+(SharedQin_T p, SharedQin_T q) {
         return p->template lian<std::plus<T>>(q);
     }
 
     friend SharedQin_T operator*(SharedQin_T p, SharedQin_T q) {
-        return p->template lian<std::multiplies<T>>(&q);
+        return p->template lian<std::multiplies<T>>(q);
     }
 
     template<class Fn>

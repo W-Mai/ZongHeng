@@ -10,4 +10,9 @@ typename Qin<T>::SharedQin_T as(Q&& qb) {
     return qb->template into<T>();
 }
 
+template<typename T, typename Q = QinBase::SharedQinBase_T>
+typename Yi<T, T>::SharedYi_T as(Q&& qb) {
+    return qb->template into<T, T>();
+}
+
 #endif // EXAMPLE_QINUTILS_H
