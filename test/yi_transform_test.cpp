@@ -3,7 +3,7 @@
 // Test Yi with different INPUT_TYPE and OUTPUT_TYPE
 //
 
-#include "Qin.h"
+#include "ZongHeng.h"
 #include "test_utils.h"
 #include <algorithm>
 #include <string>

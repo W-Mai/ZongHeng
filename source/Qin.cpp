@@ -2,7 +2,7 @@
 // Created by W-Mai on 2022/10/22.
 //
 
-#include "Qin.h"
+#include "ZongHeng.h"
 
 void operator<<(std::shared_ptr<QinBase> l, std::shared_ptr<QinBase> r) {
     l->bind(r);

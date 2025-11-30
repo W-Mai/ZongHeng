@@ -2,7 +2,7 @@
 // Created by Claude Code
 //
 
-#include "Qin.h"
+#include "ZongHeng.h"
 #include "test_utils.h"
 #include <algorithm>
 #include <string>

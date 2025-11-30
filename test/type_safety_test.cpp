@@ -3,7 +3,7 @@
 // Type Safety Tests - Verify runtime type checking and error handling
 //
 
-#include "Qin.h"
+#include "ZongHeng.h"
 #include "test_utils.h"
 #include <stdexcept>
 #include <string>

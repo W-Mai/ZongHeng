@@ -1,77 +1,15 @@
 //
-// Created by W-Mai on 2022/10/22.
+// Yi - Heterogeneous transformation node (INPUT_TYPE -> OUTPUT_TYPE)
 //
 
-#ifndef ZONGHENG_QIN_H
-#define ZONGHENG_QIN_H
+#ifndef ZONGHENG_NODES_YI_H
+#define ZONGHENG_NODES_YI_H
 
-#include <functional>
-#include <memory>
-#include <optional>
-#include <stdexcept>
-#include <typeinfo>
-#include <type_traits>
-#include <vector>
+#include "../core/ZongHengBase.h"
 
-template<class INPUT_TYPE, class OUTPUT_TYPE>
-class Yi;
-
-#define FORWARD_CONSTRAINT(TYPE, TYPE_INNER) <class TYPE, \
-    class = std::enable_if<                                                \
-        std::is_same<std::remove_cv<TYPE>, TYPE_INNER>::value              \
-        || std::is_constructible<TYPE, TYPE_INNER>::value                  \
-        || std::is_convertible<TYPE, TYPE_INNER>::value>>
-
-template<class INPUT, class OUTPUT>
-OUTPUT convert(const INPUT& input) {
-    if constexpr (std::is_convertible<INPUT, OUTPUT>::value) {
-        return static_cast<OUTPUT>(input);
-    } else {
-        throw std::runtime_error(
-            std::string("Type conversion not possible: ") +
-            typeid(INPUT).name() + " -> " + typeid(OUTPUT).name()
-        );
-    }
-}
-
-class QinBase {
-public:
-    using SharedQinBase_T = std::shared_ptr<QinBase>;
-
-    virtual ~QinBase() = default;
-
-protected:
-
-    using Zong_t = std::vector<SharedQinBase_T>;
-    using Heng_t = std::vector<SharedQinBase_T>;
-
-    Zong_t Zong;
-    Heng_t Heng;
-
-    SharedQinBase_T self;
-
-public:
-    friend void operator<<(std::shared_ptr<QinBase> l, std::shared_ptr<QinBase> r);
-
-    void bind(const std::shared_ptr<QinBase>& src);
-
-    template<class IN, class OUT>
-    typename Yi<IN, OUT>::SharedYi_T into() {
-        auto result = std::dynamic_pointer_cast<Yi<IN, OUT>>(self);
-        if (!result) {
-            throw std::runtime_error(
-                std::string("Type mismatch in into(): cannot convert to Yi<") +
-                typeid(IN).name() + ", " + typeid(OUT).name() + ">"
-            );
-        }
-        return result;
-    }
-
-    void lian(const SharedQinBase_T& q1, const SharedQinBase_T& q2) {
-        q1->Heng.push_back(self);
-        q2->Heng.push_back(self);
-    }
-};
+// ============================================================================
+// Yi - Heterogeneous Node Template
+// ============================================================================
 
 template<class INPUT_TYPE, class OUTPUT_TYPE>
 class Yi : public QinBase {
@@ -201,8 +139,7 @@ public:
         setter(s);
     }
 
-    // Utils
-public:
+    // Factory method
     template<class... ARGS>
     static SharedYi_T make(ARGS&&... val) {
         auto ptr  = std::make_shared<Yi<INPUT_TYPE, OUTPUT_TYPE>>(std::forward<ARGS>(val)...);
@@ -211,49 +148,4 @@ public:
     }
 };
 
-template<class T>
-class Qin : public Yi<T, T> {
-public:
-    using SharedQin_T = std::shared_ptr<Qin<T>>;
-
-    using Yi<T, T>::operator=;
-
-    friend SharedQin_T operator+(SharedQin_T p, SharedQin_T q) {
-        return p->template lian<std::plus<T>>(q);
-    }
-
-    friend SharedQin_T operator*(SharedQin_T p, SharedQin_T q) {
-        return p->template lian<std::multiplies<T>>(q);
-    }
-
-    template<class Fn>
-    SharedQin_T lian(std::shared_ptr<QinBase> q, Fn eff) {
-        auto new_qin = Qin<T>::make(T {});
-        new_qin->QinBase::lian(this->self, q);
-        new_qin->setEff(eff);
-        return new_qin;
-    }
-
-    template<class Fn>
-    SharedQin_T lian(std::shared_ptr<QinBase> q) {
-        auto new_qin = Qin<T>::make(T {});
-        new_qin->QinBase::lian(this->self, q);
-        new_qin->setEff([this, q]() -> T {
-            return Fn()(this->get(), q->template into<T, T>()->get());
-        });
-        return new_qin;
-    }
-
-    template<class... ARGS>
-    static SharedQin_T make(ARGS&&... val) {
-        auto ptr  = std::static_pointer_cast<Qin<T>>(Yi<T, T>::make(std::forward<ARGS>(val)...));
-        ptr->self = ptr;
-        return ptr;
-    }
-};
-
-#include "QinUtils.h"
-
-#undef FORWARD_CONSTRAINT
-
-#endif // ZONGHENG_QIN_H
+#endif // ZONGHENG_NODES_YI_H
