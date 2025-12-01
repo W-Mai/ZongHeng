@@ -68,3 +68,8 @@ add_test(
         NAME combinators_test
         COMMAND $<TARGET_FILE:combinators_test>
 )
+
+add_test(
+        NAME edge_cases_test
+        COMMAND $<TARGET_FILE:edge_cases_test>
+)

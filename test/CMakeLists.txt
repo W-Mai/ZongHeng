@@ -24,3 +24,6 @@ target_link_libraries(operators_test ZongHeng)
 
 add_executable(combinators_test combinators_test.cpp)
 target_link_libraries(combinators_test ZongHeng)
+
+add_executable(edge_cases_test edge_cases_test.cpp)
+target_link_libraries(edge_cases_test ZongHeng)
