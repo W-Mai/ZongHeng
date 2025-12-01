@@ -25,6 +25,10 @@ add_executable(example ${APP_SOURCES})
 # Link
 target_link_libraries(example ZongHeng)
 
+# Chainable API example
+add_executable(chainable_example example/chainable_example.cpp)
+target_link_libraries(chainable_example ZongHeng)
+
 # test
 enable_testing()
 
@@ -58,4 +62,9 @@ add_test(
 add_test(
         NAME operators_test
         COMMAND $<TARGET_FILE:operators_test>
+)
+
+add_test(
+        NAME combinators_test
+        COMMAND $<TARGET_FILE:combinators_test>
 )

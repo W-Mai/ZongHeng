@@ -17,6 +17,34 @@
 template<class INPUT_TYPE, class OUTPUT_TYPE>
 class Yi;
 
+template<class T>
+class Qin;
+
+namespace ZongHeng {
+    template<class T, class Fn>
+    std::shared_ptr<Qin<T>> fold(const std::vector<std::shared_ptr<Qin<T>>>&, T, Fn);
+}
+
+// Forward declarations for operator friends
+template<class T>
+std::shared_ptr<Qin<bool>> operator==(std::shared_ptr<Qin<T>>, std::shared_ptr<Qin<T>>);
+template<class T>
+std::shared_ptr<Qin<bool>> operator!=(std::shared_ptr<Qin<T>>, std::shared_ptr<Qin<T>>);
+template<class T>
+std::shared_ptr<Qin<bool>> operator<(std::shared_ptr<Qin<T>>, std::shared_ptr<Qin<T>>);
+template<class T>
+std::shared_ptr<Qin<bool>> operator>(std::shared_ptr<Qin<T>>, std::shared_ptr<Qin<T>>);
+template<class T>
+std::shared_ptr<Qin<bool>> operator<=(std::shared_ptr<Qin<T>>, std::shared_ptr<Qin<T>>);
+template<class T>
+std::shared_ptr<Qin<bool>> operator>=(std::shared_ptr<Qin<T>>, std::shared_ptr<Qin<T>>);
+template<class T>
+std::shared_ptr<Qin<T>> operator-(std::shared_ptr<Qin<T>>);
+template<class T>
+std::shared_ptr<Qin<T>> operator~(std::shared_ptr<Qin<T>>);
+template<class T>
+std::shared_ptr<Qin<bool>> operator!(std::shared_ptr<Qin<T>>);
+
 // ============================================================================
 // Type Constraint Macro
 // ============================================================================
@@ -52,6 +80,38 @@ public:
     using SharedQinBase_T = std::shared_ptr<QinBase>;
 
     virtual ~QinBase() = default;
+
+    // Friend declarations for node classes
+    template<class T>
+    friend class Qin;
+    template<class IN, class OUT>
+    friend class Yi;
+
+    // Friend declarations for combinators and operators
+    template<class T, class Fn>
+    friend std::shared_ptr<Qin<T>> ZongHeng::fold(const std::vector<std::shared_ptr<Qin<T>>>&, T, Fn);
+
+    // Comparison operators
+    template<class T>
+    friend std::shared_ptr<Qin<bool>> operator==(std::shared_ptr<Qin<T>>, std::shared_ptr<Qin<T>>);
+    template<class T>
+    friend std::shared_ptr<Qin<bool>> operator!=(std::shared_ptr<Qin<T>>, std::shared_ptr<Qin<T>>);
+    template<class T>
+    friend std::shared_ptr<Qin<bool>> operator<(std::shared_ptr<Qin<T>>, std::shared_ptr<Qin<T>>);
+    template<class T>
+    friend std::shared_ptr<Qin<bool>> operator>(std::shared_ptr<Qin<T>>, std::shared_ptr<Qin<T>>);
+    template<class T>
+    friend std::shared_ptr<Qin<bool>> operator<=(std::shared_ptr<Qin<T>>, std::shared_ptr<Qin<T>>);
+    template<class T>
+    friend std::shared_ptr<Qin<bool>> operator>=(std::shared_ptr<Qin<T>>, std::shared_ptr<Qin<T>>);
+
+    // Unary operators
+    template<class T>
+    friend std::shared_ptr<Qin<T>> operator-(std::shared_ptr<Qin<T>>);
+    template<class T>
+    friend std::shared_ptr<Qin<T>> operator~(std::shared_ptr<Qin<T>>);
+    template<class T>
+    friend std::shared_ptr<Qin<bool>> operator!(std::shared_ptr<Qin<T>>);
 
 protected:
     using Zong_t = std::vector<SharedQinBase_T>;
@@ -90,13 +150,24 @@ public:
         return result;
     }
 
+protected:
     /**
-     * Create dependency relationship between nodes
+     * @brief Create dependency relationship between nodes (internal use only)
+     *
+     * Registers this node as derived from q1 and q2 by adding this node
+     * to their Heng (downstream) lists. This is a core building block for
+     * reactive dependencies.
+     *
+     * Protected to prevent misuse - only accessible to framework internals
+     * (Yi/Qin classes and friend operators/combinators).
      */
     void lian(const SharedQinBase_T& q1, const SharedQinBase_T& q2) {
         q1->Heng.push_back(self);
         q2->Heng.push_back(self);
     }
+
+    // Internal: Add a derived node (for combinators that need direct access)
+    void addDerivedNode(const SharedQinBase_T& node) { Heng.push_back(node); }
 };
 
 #endif // ZONGHENG_CORE_BASE_H

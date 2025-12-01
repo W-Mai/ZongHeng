@@ -70,6 +70,67 @@ public:
         return new_qin;
     }
 
+    // ========================================================================
+    // Functional Combinators (Chainable)
+    // ========================================================================
+
+    /**
+     * @brief Map this node's value through a transformation function
+     * @param fn Transformation function (T -> OUT)
+     * @return New Qin node with transformed value
+     * @example auto doubled = nums->map([](int x) { return x * 2; });
+     */
+    template<class Fn>
+    auto map(Fn fn) -> std::shared_ptr<Qin<decltype(fn(std::declval<T>()))>> {
+        using OUT = decltype(fn(std::declval<T>()));
+        auto result = Qin<OUT>::make(OUT{});
+        result->QinBase::lian(this->self, this->self);
+        result->setEff([self = this->self, fn]() -> OUT {
+            return fn(self->template into<T, T>()->get());
+        });
+        return result;
+    }
+
+    /**
+     * @brief Filter this node's value based on a predicate
+     * @param defaultVal Default value when predicate fails
+     * @param predicate Boolean function (T -> bool)
+     * @return New Qin node with filtered value
+     * @example auto positive = value->filter(fallback, [](int x) { return x > 0; });
+     */
+    template<class Pred>
+    SharedQin_T filter(SharedQin_T defaultVal, Pred predicate) {
+        auto result = Qin<T>::make(T{});
+        result->QinBase::lian(this->self, defaultVal);
+        result->setEff([self = this->self, defaultVal, predicate]() -> T {
+            return predicate(self->template into<T, T>()->get())
+                ? self->template into<T, T>()->get()
+                : defaultVal->get();
+        });
+        return result;
+    }
+
+    /**
+     * @brief Conditionally select between this value and another
+     * @param condition Boolean Qin node
+     * @param falseVal Value to use when condition is false
+     * @return New Qin node with selected value
+     * @example auto selected = optionA->when(flag, optionB);
+     */
+    SharedQin_T when(std::shared_ptr<Qin<bool>> condition, SharedQin_T falseVal) {
+        auto result = Qin<T>::make(T{});
+        result->QinBase::lian(condition, condition);
+        this->addDerivedNode(result);
+        falseVal->addDerivedNode(result);
+
+        result->setEff([self = this->self, condition, falseVal]() -> T {
+            return condition->get()
+                ? self->template into<T, T>()->get()
+                : falseVal->get();
+        });
+        return result;
+    }
+
     // Factory method
     template<class... ARGS>
     static SharedQin_T make(ARGS&&... val) {

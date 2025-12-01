@@ -17,6 +17,7 @@
 
 // Operations
 #include "operations/Operators.h"
+#include "operations/Combinators.h"
 
 // Utilities
 #include "QinUtils.h"

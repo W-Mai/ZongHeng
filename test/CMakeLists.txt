@@ -21,3 +21,6 @@ target_link_libraries(type_safety_test ZongHeng)
 
 add_executable(operators_test operators_test.cpp)
 target_link_libraries(operators_test ZongHeng)
+
+add_executable(combinators_test combinators_test.cpp)
+target_link_libraries(combinators_test ZongHeng)
