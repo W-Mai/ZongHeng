@@ -27,3 +27,6 @@ target_link_libraries(combinators_test ZongHeng)
 
 add_executable(edge_cases_test edge_cases_test.cpp)
 target_link_libraries(edge_cases_test ZongHeng)
+
+add_executable(boundary_test boundary_test.cpp)
+target_link_libraries(boundary_test ZongHeng)

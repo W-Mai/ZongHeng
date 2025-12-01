@@ -207,6 +207,8 @@ const auto& hengs = node->getHeng();       // 获取派生节点列表
   - `test/type_safety_test.cpp` - 类型安全
   - `test/operators_test.cpp` - 运算符
   - `test/combinators_test.cpp` - 函数式组合
+  - `test/edge_cases_test.cpp` - 边缘案例（零除法、循环依赖、空fold）
+  - `test/boundary_test.cpp` - 边界值（溢出、极值、深链、大数据）
 
 ## Commit 信息
 

@@ -73,3 +73,8 @@ add_test(
         NAME edge_cases_test
         COMMAND $<TARGET_FILE:edge_cases_test>
 )
+
+add_test(
+        NAME boundary_test
+        COMMAND $<TARGET_FILE:boundary_test>
+)
