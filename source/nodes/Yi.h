@@ -23,7 +23,7 @@ protected:
     NoneCVTInput                                      rawValue;
     NoneCVTOutput                                     getterValue;
     std::function<NoneCVTInput()>                     value;
-    std::function<NoneCVTOutput()>                    effect;
+    std::function<NoneCVTInput()>                     effect;
     std::function<NoneCVTInput(const NoneCVTOutput&)> _setter;
     std::function<NoneCVTOutput(const NoneCVTInput&)> _getter;
 
@@ -71,9 +71,16 @@ public:
 
         for (auto& heng : Heng) {
             try {
-                auto& h_ef = heng->template into<INPUT_TYPE, OUTPUT_TYPE>()->effect;
-                if (h_ef)
-                    heng->template into<INPUT_TYPE, OUTPUT_TYPE>()->set(h_ef());
+                const auto& h = heng->template into<INPUT_TYPE, OUTPUT_TYPE>();
+                if (h->effect) {
+                    auto h_ef_val = h->effect();
+                    if (std::is_same_v<NoneCVTInput, NoneCVTOutput>) {
+                        h->set(convert<NoneCVTInput, NoneCVTOutput>(h_ef_val));
+                    } else if (h->_getter) {
+                        auto h_out = h->_getter(h_ef_val);
+                        h->set(h_out);
+                    }
+                }
             } catch (const std::runtime_error&) {
                 // Skip incompatible type nodes
             }
@@ -81,11 +88,8 @@ public:
     }
 
     NoneCVTOutput get() {
-        if (effect) {
-            return effect();
-        }
+        const auto v = effect ? effect() : value();
 
-        const NoneCVTInput v = value();
         if (_getter) {
             getterValue = _getter(v);
             return getterValue;
